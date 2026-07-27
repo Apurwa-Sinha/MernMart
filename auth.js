@@ -1,32 +1,32 @@
+
 const User = require('../models/user');
 const jwt = require('jsonwebtoken'); // to generate signed token
-const expressJwt = require('express-jwt'); // for auth check
+const { expressjwt } = require('express-jwt'); // for auth check (express-jwt v6+)
 const { errorHandler } = require('../helpers/dbErrorHandler');
-
 require('dotenv').config();
 
-exports.signup = (req, res) => {
-  // console.log('req.body', req.body);
-  const user = new User(req.body);
-  user.save((err, user) => {
-    if (err) {
-      return res.status(400).json({
-        err: errorHandler(err),
-      });
-    }
+exports.signup = async (req, res) => {
+  try {
+    const user = new User(req.body);
+    await user.save();
     user.salt = undefined;
     user.hashed_password = undefined;
     res.json({
       user,
     });
-  });
+  } catch (err) {
+    return res.status(400).json({
+      err: errorHandler(err),
+    });
+  }
 };
 
-exports.signin = (req, res) => {
+exports.signin = async (req, res) => {
   // find the user based on email
   const { email, password } = req.body;
-  User.findOne({ email }, (err, user) => {
-    if (err || !user) {
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
       return res.status(400).json({
         error: "User with that email doesn't exist. Please signup.",
       });
@@ -41,14 +41,19 @@ exports.signin = (req, res) => {
     // generate a signed token with user id and secret
     const token = jwt.sign(
       { _id: user._id },
-      process.env.JWT_SECRET
+      process.env.JWT_SECRET,
+      { expiresIn: '1d' }
     );
     // persist the token as 't' in cookie with expiry date
-    res.cookie('t', token, { expire: new Date() + 9999 });
+    res.cookie('t', token, { expires: new Date(Date.now() + 24 * 60 * 60 * 1000) });
     // return response with user and token to frontend client
-    const { _id, name, email, role } = user;
+    const { _id, name, role } = user;
     return res.json({ token, user: { _id, email, name, role } });
-  });
+  } catch (err) {
+    return res.status(400).json({
+      error: errorHandler(err),
+    });
+  }
 };
 
 exports.signout = (req, res) => {
@@ -56,9 +61,9 @@ exports.signout = (req, res) => {
   res.json({ message: 'Signout success' });
 };
 
-exports.requireSignin = expressJwt({
+exports.requireSignin = expressjwt({
   secret: process.env.JWT_SECRET,
-  // algorithms: ['RS256'],
+  algorithms: ['HS256'],
   userProperty: 'auth',
 });
 
@@ -80,3 +85,5 @@ exports.isAdmin = (req, res, next) => {
   }
   next();
 };
+      
+
