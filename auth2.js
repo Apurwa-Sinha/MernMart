@@ -1,16 +1,20 @@
-const express = require('express');
-const router = express.Router();
+// Add this to your existing validator.js, alongside userSignupValidator
 
-const {
-  signup,
-  signin,
-  signout,
-  requireSignin,
-} = require('../controllers/auth');
-const { userSignupValidator } = require('../validator');
+exports.userSigninValidator = (req, res, next) => {
+  req.check('email', 'Email is required').notEmpty();
+  req.check('email', 'Email must be between 3 to 32 characters')
+    .matches(/.+\@.+\..+/)
+    .withMessage('Email must contain @')
+    .isLength({
+      min: 4,
+      max: 32,
+    });
+  req.check('password', 'Password is required').notEmpty();
 
-router.post('/signup', userSignupValidator, signup);
-router.post('/signin', signin);
-router.get('/signout', signout);
-
-module.exports = router;
+  const errors = req.validationErrors();
+  if (errors) {
+    const firstError = errors.map((error) => error.msg)[0];
+    return res.status(400).json({ error: firstError });
+  }
+  next();
+};
