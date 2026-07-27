@@ -1,3 +1,4 @@
+
 const formidable = require('formidable');
 const _ = require('lodash');
 const fs = require('fs');
@@ -347,6 +348,53 @@ exports.visualSearch = async (req, res) => {
   });
 };
 
+/**
+ * Style DNA recommendations: returns products ranked by similarity to
+ * this user's running-average "taste vector" (built from products
+ * they've viewed/purchased — see controllers/user.js).
+ * req.profile is expected to be set by the :userId route param.
+ */
+exports.forYou = async (req, res) => {
+  try {
+    const user = req.profile;
+
+    if (!user.styleProfile) {
+      // no signal yet for this user — fall back to newest products
+      // rather than an empty section
+      const fallback = await Product.find()
+        .select('-photo')
+        .populate('category')
+        .sort('-createdAt')
+        .limit(8);
+      return res.json(fallback);
+    }
+
+    const limit = req.query.limit ? parseInt(req.query.limit) : 8;
+
+    const products = await Product.find({ embedding: { $exists: true } })
+      .select('-photo')
+      .populate('category');
+
+    const ranked = products
+      .map((product) => ({
+        product,
+        similarity: cosineSimilarity(user.styleProfile, product.embedding),
+      }))
+      .sort((a, b) => b.similarity - a.similarity)
+      .slice(0, limit)
+      .map((entry) => ({
+        ...entry.product.toObject(),
+        similarity: entry.similarity,
+      }));
+
+    res.json(ranked);
+  } catch (err) {
+    return res.status(400).json({
+      error: 'Could not load recommendations',
+    });
+  }
+};
+
 exports.decreaseQuantity = async (req, res, next) => {
   try {
     let bulkOps = req.body.order.products.map((item) => {
@@ -366,3 +414,16 @@ exports.decreaseQuantity = async (req, res, next) => {
     });
   }
 };
+
+
+  
+
+
+
+
+      
+
+
+
+
+
