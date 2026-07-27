@@ -1,0 +1,77 @@
+const mongoose = require('mongoose');
+const { ObjectId } = mongoose.Schema;
+
+const ParticipantSchema = new mongoose.Schema(
+  {
+    email: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    shareAmount: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    paid: {
+      type: Boolean,
+      default: false,
+    },
+    isInitiator: {
+      type: Boolean,
+      default: false,
+    },
+    transactionId: String,
+    paidAt: Date,
+  },
+  { _id: false }
+);
+
+const GroupOrderSchema = new mongoose.Schema(
+  {
+    initiator: {
+      type: ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    products: [
+      {
+        product: { type: ObjectId, ref: 'Product' },
+        name: String,
+        price: Number,
+        count: Number,
+      },
+    ],
+    totalAmount: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    address: String,
+    // unique, unguessable token used in the shareable checkout link —
+    // e.g. https://yoursite.com/group-order/:shareToken
+    shareToken: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    participants: [ParticipantSchema],
+    status: {
+      type: String,
+      enum: ['pending', 'completed', 'expired', 'cancelled'],
+      default: 'pending',
+    },
+    expiresAt: {
+      type: Date,
+      required: true,
+    },
+    // set once every participant has paid and the real Order is created
+    finalOrder: {
+      type: ObjectId,
+      ref: 'Order',
+    },
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose.model('GroupOrder', GroupOrderSchema);
