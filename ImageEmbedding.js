@@ -1,3 +1,4 @@
+
 /**
  * Image embedding helper for visual search.
  *
@@ -106,3 +107,29 @@ exports.cosineSimilarity = (vecA, vecB) => {
   if (normA === 0 || normB === 0) return 0;
   return dot / (Math.sqrt(normA) * Math.sqrt(normB));
 };
+
+/**
+ * Incrementally folds a new embedding into a running average vector,
+ * used to build a user's "Style DNA" profile from every product they
+ * view or purchase, without needing to store or replay full history.
+ *
+ * @param {number[]|undefined} existingVector - the profile's current average (undefined if this is the first one)
+ * @param {number} existingCount - how many vectors have been folded in so far
+ * @param {number[]} newVector - the new embedding to fold in
+ * @returns {{ vector: number[], count: number }}
+ */
+exports.updateRunningAverage = (existingVector, existingCount, newVector) => {
+  if (!existingVector || existingCount === 0) {
+    return { vector: newVector, count: 1 };
+  }
+
+  const newCount = existingCount + 1;
+  const updated = existingVector.map(
+    (value, i) => (value * existingCount + newVector[i]) / newCount
+  );
+
+  return { vector: updated, count: newCount };
+}; 
+
+
+
