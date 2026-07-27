@@ -395,6 +395,106 @@ exports.forYou = async (req, res) => {
   }
 };
 
+const { Order } = require('../models/order');
+
+const MIN_ORDERS_FOR_SIGNAL = 5; // below this, we don't have enough data to say anything meaningful
+
+/**
+ * Runs an aggregation that groups orders containing products from a
+ * given category (or all orders, if no category filter is passed) by
+ * status, so we can compute what fraction ended up "Returned".
+ */
+const getReturnStats = async (categoryId) => {
+  const pipeline = [
+    { $unwind: '$products' },
+    {
+      $lookup: {
+        from: 'products',
+        localField: 'products.product',
+        foreignField: '_id',
+        as: 'productDetails',
+      },
+    },
+    { $unwind: '$productDetails' },
+  ];
+
+  if (categoryId) {
+    pipeline.push({
+      $match: { 'productDetails.category': categoryId },
+    });
+  }
+
+  pipeline.push({
+    $group: { _id: '$status', count: { $sum: 1 } },
+  });
+
+  const results = await Order.aggregate(pipeline);
+
+  const total = results.reduce((sum, r) => sum + r.count, 0);
+  const returned = results.find((r) => r._id === 'Returned');
+  const returnedCount = returned ? returned.count : 0;
+
+  return {
+    total,
+    returnedCount,
+    returnRate: total > 0 ? returnedCount / total : 0,
+  };
+};
+
+/**
+ * GET /api/products/:productId/return-risk
+ * Returns a category-level return-risk signal for the given product,
+ * compared against the store-wide average return rate. Deliberately
+ * category-level, not size-level or product-level, since that's the
+ * granularity the current data model actually supports — a product-only
+ * signal would be too sparse to be meaningful for most items.
+ */
+exports.getReturnRisk = async (req, res) => {
+  try {
+    const categoryId = req.product.category;
+
+    const [categoryStats, overallStats] = await Promise.all([
+      getReturnStats(categoryId),
+      getReturnStats(null),
+    ]);
+
+    if (categoryStats.total < MIN_ORDERS_FOR_SIGNAL) {
+      return res.json({
+        available: false,
+        message: 'Not enough order history yet to show a return-risk signal for this category.',
+      });
+    }
+
+    const rate = categoryStats.returnRate;
+    const avg = overallStats.returnRate;
+
+    let riskLevel = 'average';
+    if (avg > 0) {
+      if (rate > avg * 1.2) riskLevel = 'high';
+      else if (rate < avg * 0.8) riskLevel = 'low';
+    }
+
+    const messages = {
+      high: 'Items in this category are returned more often than average — double-check sizing/fit details before ordering.',
+      average: 'This category has a typical return rate.',
+      low: 'This category is returned less often than average.',
+    };
+
+    res.json({
+      available: true,
+      riskLevel,
+      returnRatePercent: Math.round(rate * 1000) / 10,
+      storeAverageReturnRatePercent: Math.round(avg * 1000) / 10,
+      sampleSize: categoryStats.total,
+      message: messages[riskLevel],
+    });
+  } catch (err) {
+    return res.status(400).json({
+      error: 'Could not compute return risk',
+    });
+  }
+};
+
 exports.decreaseQuantity = async (req, res, next) => {
   try {
     let bulkOps = req.body.order.products.map((item) => {
@@ -414,16 +514,4 @@ exports.decreaseQuantity = async (req, res, next) => {
     });
   }
 };
-
-
-  
-
-
-
-
-      
-
-
-
-
-
+    
