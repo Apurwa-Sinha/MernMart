@@ -1,4 +1,4 @@
-MERNECOMMERCE
+MERNMART
 
 The user can view all products
 
