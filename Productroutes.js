@@ -1,3 +1,4 @@
+
 const express = require('express');
 const router = express.Router();
 
@@ -14,6 +15,7 @@ const {
   photo,
   listSearch,
   visualSearch,
+  forYou,
 } = require('../controllers/product');
 const { requireSignin, isAuth, isAdmin } = require('../controllers/auth');
 const { userById } = require('../controllers/user');
@@ -39,6 +41,7 @@ router.put(
 router.get('/products', list);
 router.get('/products/search', listSearch);
 router.post('/products/visual-search', visualSearch);
+router.get('/products/for-you/:userId', requireSignin, isAuth, forYou);
 router.get('/products/related/:productId', listRelated);
 router.get('/products/categories', listCategories);
 router.post('/products/by/search', listBySearch);
