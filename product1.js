@@ -1,3 +1,4 @@
+
 const mongoose = require('mongoose');
 const { ObjectId } = mongoose.Schema;
 
@@ -16,9 +17,8 @@ const productSchema = new mongoose.Schema(
     },
     price: {
       type: Number,
-      trim: true,
       required: true,
-      maxlength: 32,
+      min: 0,
     },
     category: {
       type: ObjectId,
@@ -27,6 +27,9 @@ const productSchema = new mongoose.Schema(
     },
     quantity: {
       type: Number,
+      required: true,
+      default: 0,
+      min: 0,
     },
     sold: {
       type: Number,
@@ -45,3 +48,4 @@ const productSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model('Product', productSchema);
+  
