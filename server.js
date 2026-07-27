@@ -1,12 +1,13 @@
+
 const express = require('express');
 const mongoose = require('mongoose');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
-
 const path = require('path');
-const expressValidator = require('express-validator');
+const cors = require('cors');
 require('dotenv').config();
+
 // import routes
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
@@ -17,23 +18,11 @@ const orderRoutes = require('./routes/order');
 
 // app
 const app = express();
-const cors = require('cors');
-app.use(cors({
-    origin: ['https://smartcart1.onrender.com', 'https://https://smartcart-server.onrender.com']
-}));
 
 // db connection
 const connectDB = async () => {
   try {
-    await mongoose.connect(
-      process.env.MONGODB_URI,
-      {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        useCreateIndex: true,
-        useFindAndModify: false,
-      }
-    );
+    await mongoose.connect(process.env.MONGODB_URI);
     console.log('MongoDB Connected');
   } catch (err) {
     console.error(err.message);
@@ -47,8 +36,14 @@ connectDB();
 app.use(morgan('dev'));
 app.use(bodyParser.json());
 app.use(cookieParser());
-app.use(expressValidator());
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      'https://smartcart1.onrender.com',
+      'https://smartcart-server.onrender.com',
+    ],
+  })
+);
 
 // routes middleware
 app.use('/api', authRoutes);
@@ -62,14 +57,14 @@ app.use('/api', orderRoutes);
 if (process.env.NODE_ENV === 'production') {
   // Set static folder
   app.use(express.static('client/build'));
-
   app.get('*', (req, res) => {
     res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
   });
 }
 
 const PORT = process.env.PORT || 5000;
-
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+  
