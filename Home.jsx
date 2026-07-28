@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -14,6 +15,7 @@ import {
 } from '@material-ui/core';
 import StyleDNARecommendations from '../components/StyleDNARecommendations';
 import VisualSearch from '../components/VisualSearch';
+import { addItemToCart } from '../helpers/cartHelpers';
 
 const API = process.env.REACT_APP_API_URL || '';
 
@@ -21,6 +23,13 @@ const Home = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [addedId, setAddedId] = useState(null);
+
+  const handleAddToCart = (product) => {
+    addItemToCart(product, 1);
+    setAddedId(product._id);
+    setTimeout(() => setAddedId(null), 1500);
+  };
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -103,9 +112,16 @@ const Home = () => {
                     to={`/product/${product._id}`}
                     size="small"
                     color="primary"
-                    fullWidth
                   >
                     View details
+                  </Button>
+                  <Button
+                    size="small"
+                    color="primary"
+                    disabled={product.quantity === 0}
+                    onClick={() => handleAddToCart(product)}
+                  >
+                    {addedId === product._id ? 'Added!' : 'Add to cart'}
                   </Button>
                 </CardActions>
               </Card>
@@ -118,3 +134,6 @@ const Home = () => {
 };
 
 export default Home;
+
+
+
