@@ -1,3 +1,4 @@
+
 const express = require('express');
 const router = express.Router();
 
@@ -6,6 +7,7 @@ const {
   getGroupOrderByToken,
   payShare,
   cancelGroupOrder,
+  getClientToken,
 } = require('../controllers/groupOrder');
 const { requireSignin, isAuth } = require('../controllers/auth');
 const { userById } = require('../controllers/user');
@@ -20,6 +22,7 @@ router.post(
 
 // public — invited participants may not have an account
 router.get('/group-order/:token', getGroupOrderByToken);
+router.get('/group-order/:token/client-token', getClientToken);
 router.post('/group-order/:token/pay', payShare);
 
 // only the initiator can cancel, so this stays behind auth
