@@ -1,3 +1,4 @@
+
 const crypto = require('crypto');
 const braintree = require('braintree');
 const GroupOrder = require('../models/groupOrder');
@@ -13,6 +14,21 @@ const gateway = new braintree.BraintreeGateway({
 });
 
 const GROUP_ORDER_EXPIRY_DAYS = 7;
+
+/**
+ * Public — generates a Braintree client token for the Drop-in UI.
+ * Deliberately not behind requireSignin/isAuth: invited participants
+ * paying their share of a group order may not have an account at all.
+ */
+exports.getClientToken = async (req, res) => {
+  gateway.clientToken.generate({}, (err, response) => {
+    if (err) {
+      console.error('Braintree clientToken error:', err);
+      return res.status(500).json({ error: 'Unable to generate client token' });
+    }
+    res.send(response);
+  });
+};
 
 /**
  * Starts a group order. The initiator picks products and a list of
@@ -263,3 +279,7 @@ exports.cancelGroupOrder = async (req, res) => {
     });
   }
 };
+
+
+
+ 
