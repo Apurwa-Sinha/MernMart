@@ -1,0 +1,51 @@
+import { useEffect } from 'react';
+
+const API = process.env.REACT_APP_API_URL || '';
+
+const getUserId = () => {
+  try {
+    const stored = JSON.parse(localStorage.getItem('jwt'));
+    return stored && stored.user ? stored.user._id : null;
+  } catch (e) {
+    return null;
+  }
+};
+
+const getToken = () => {
+  try {
+    const stored = JSON.parse(localStorage.getItem('jwt'));
+    return stored ? stored.token : null;
+  } catch (e) {
+    return null;
+  }
+};
+
+/**
+ * Call this from your product detail page component:
+ *
+ *   useTrackProductView(product._id);
+ *
+ * Fires once per product view (when productId changes) for signed-in
+ * users only. Fails silently — this is a background personalization
+ * signal, not something that should ever interrupt the page.
+ */
+export const useTrackProductView = (productId) => {
+  useEffect(() => {
+    if (!productId) return;
+
+    const userId = getUserId();
+    const token = getToken();
+    if (!userId || !token) return;
+
+    fetch(`${API}/api/user/track-view/${userId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ productId }),
+    }).catch(() => {
+      // intentionally ignored — this is a nice-to-have signal
+    });
+  }, [productId]);
+};
