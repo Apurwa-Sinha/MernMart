@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Box,
@@ -14,6 +15,7 @@ import {
 import AddIcon from '@material-ui/icons/Add';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
 import DeleteIcon from '@material-ui/icons/Delete';
+import { getCartItems, getCartTotal } from '../helpers/cartHelpers';
 
 const API = process.env.REACT_APP_API_URL || '';
 
@@ -36,10 +38,10 @@ const getToken = () => {
 };
 
 /**
- * @param {Array<{_id, name, price, count}>} cartItems - the items being split
  * @param {string} address - shipping address for the eventual order
  */
-const CreateGroupOrder = ({ cartItems = [], address = '' }) => {
+const CreateGroupOrder = ({ address = '' }) => {
+  const [cartItems] = useState(getCartItems());
   const [emails, setEmails] = useState([]);
   const [emailInput, setEmailInput] = useState('');
   const [shareLink, setShareLink] = useState('');
@@ -220,3 +222,8 @@ const CreateGroupOrder = ({ cartItems = [], address = '' }) => {
 };
 
 export default CreateGroupOrder;
+
+
+
+
+
