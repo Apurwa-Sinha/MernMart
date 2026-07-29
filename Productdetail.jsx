@@ -13,32 +13,11 @@ import {
   Chip,
 } from '@material-ui/core';
 import ReturnRiskBadge from '../components/ReturnRiskBadge';
+import CoBrowseOverlay from '../components/CoBrowseOverlay';
 import { useTrackProductView } from '../hooks/useTrackProductView';
+import { addItemToCart } from '../helpers/cartHelpers';
 
 const API = process.env.REACT_APP_API_URL || '';
-
-const addToCart = (product, quantity) => {
-  let cart = [];
-  try {
-    cart = JSON.parse(localStorage.getItem('cart')) || [];
-  } catch (e) {
-    cart = [];
-  }
-
-  const existing = cart.find((item) => item._id === product._id);
-  if (existing) {
-    existing.count += quantity;
-  } else {
-    cart.push({
-      _id: product._id,
-      name: product.name,
-      price: product.price,
-      count: quantity,
-    });
-  }
-
-  localStorage.setItem('cart', JSON.stringify(cart));
-};
 
 const ProductDetail = () => {
   const { productId } = useParams();
@@ -48,6 +27,23 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [added, setAdded] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  // co-browsing session is just a token in the URL — if present, both
+  // this user and whoever they share the link with join the same room
+  const cobrowseSessionId = new URLSearchParams(window.location.search).get(
+    'cobrowse'
+  );
+
+  const startCoBrowseSession = () => {
+    const sessionId = Math.random().toString(36).slice(2, 10);
+    const url = `${window.location.origin}/product/${productId}?cobrowse=${sessionId}`;
+    navigator.clipboard.writeText(url);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
+    // reload with the session param so the host also joins their own session
+    window.location.href = url;
+  };
 
   // fold this product's embedding into the signed-in user's Style DNA
   // profile once the product is loaded (no-ops for logged-out users)
@@ -88,7 +84,7 @@ const ProductDetail = () => {
   }, [productId]);
 
   const handleAddToCart = () => {
-    addToCart(product, 1);
+    addItemToCart(product, 1);
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
@@ -161,9 +157,23 @@ const ProductDetail = () => {
             >
               {outOfStock ? 'Out of stock' : added ? 'Added!' : 'Add to cart'}
             </Button>
+
+            {!cobrowseSessionId && (
+              <Button
+                variant="outlined"
+                color="primary"
+                size="large"
+                style={{ marginLeft: 12 }}
+                onClick={startCoBrowseSession}
+              >
+                {copiedLink ? 'Link copied!' : 'Shop with a friend'}
+              </Button>
+            )}
           </Box>
         </Grid>
       </Grid>
+
+      <CoBrowseOverlay sessionId={cobrowseSessionId} />
 
       {related.length > 0 && (
         <Box mt={6}>
@@ -207,3 +217,19 @@ const ProductDetail = () => {
 };
 
 export default ProductDetail;
+
+
+  
+    
+
+
+
+
+
+
+
+            
+    
+
+
+
