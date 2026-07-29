@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 
@@ -20,6 +21,8 @@ import AddProduct from './pages/AddProduct';
 import ManageProducts from './pages/ManageProducts';
 import UpdateProduct from './pages/UpdateProduct';
 import AdminOrders from './pages/AdminOrders';
+import ManageCategories from './pages/ManageCategories';
+import OrderHistory from './pages/OrderHistory';
 
 function App() {
   return (
@@ -39,10 +42,12 @@ function App() {
         {/* these require a signed-in user */}
         <PrivateRoute exact path="/checkout" component={Checkout} />
         <PrivateRoute exact path="/split-checkout" component={CreateGroupOrder} />
+        <PrivateRoute exact path="/orders" component={OrderHistory} />
 
         {/* admin-only routes */}
         <AdminRoute exact path="/admin/dashboard" component={AdminDashboard} />
         <AdminRoute exact path="/admin/create/category" component={AddCategory} />
+        <AdminRoute exact path="/admin/categories" component={ManageCategories} />
         <AdminRoute exact path="/admin/create/product" component={AddProduct} />
         <AdminRoute exact path="/admin/products" component={ManageProducts} />
         <AdminRoute exact path="/admin/product/update/:productId" component={UpdateProduct} />
@@ -64,3 +69,6 @@ function App() {
 }
 
 export default App;
+
+
+
