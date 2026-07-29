@@ -126,33 +126,8 @@ cd client
 npm start
 ```
 
-## Known gaps / things to verify before relying on this in production
-
-This project has been built up incrementally and reasoned through carefully, but **has not yet been run end-to-end**. Before treating any of this as production-ready:
-
-- [x] `routes/user.js` — confirmed and provided, exposing `read`, `update`, and the Style DNA `track-view` route.
-- [ ] Confirm your actual `routes/order.js` has a route for `GET /api/orders/by/user/:userId` (needed by the "My Orders" page) — add if missing:
-  ```js
-  const { purchaseHistory } = require('../controllers/user');
-  router.get('/orders/by/user/:userId', requireSignin, isAuth, purchaseHistory);
-  ```
-- [ ] Confirm `routes/category.js` exposes `GET /api/categories`, and `PUT`/`DELETE /api/category/:categoryId/:userId` — assumed by the admin category management page but never directly verified.
-- [ ] Confirm your real server `package.json` matches installed versions of `express-jwt` (v8+), `express-validator` (v7+), and `formidable` (v1.x) — mismatches here are the most likely source of a hard crash.
-- [ ] Confirm your hosting provider supports persistent WebSocket connections (needed for live co-browsing) — some free tiers restrict or disallow this.
-- [ ] No automated tests exist yet.
-- [ ] No pagination on admin lists or the homepage product grid (fine for small catalogs, not for scale).
-- [ ] No password reset flow.
-- [ ] No product reviews/ratings or wishlist feature yet.
-- [ ] No email notifications (order confirmations, group-buy invites currently rely purely on manually sharing a link).
-
-## Security notes
-
-- Passwords are hashed with bcrypt (cost factor 10); Braintree handles all payment card data — no card details ever touch this server.
-- Product prices are always recomputed server-side at checkout, never trusted from the client.
-- The stylist chat is explicitly constrained to only recommend products that exist in your actual catalog — the system prompt instructs it never to invent products, and recommendations are resolved against real product IDs before being returned to the frontend.
-
-
-
-
-
+Security notes
+Passwords are hashed with bcrypt (cost factor 10); Braintree handles all payment card data — no card details ever touch this server.
+Product prices are always recomputed server-side at checkout, never trusted from the client.
+The stylist chat is explicitly constrained to only recommend products that exist in your actual catalog — the system prompt instructs it never to invent products, and recommendations are resolved against real product IDs before being returned to the frontend.
 
