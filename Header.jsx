@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useHistory } from 'react-router-dom';
 import {
@@ -63,7 +64,10 @@ const Header = () => {
 
         {authed ? (
           <Box display="flex" alignItems="center">
-            <Typography variant="body2" style={{ marginRight: 12 }}>
+            <Button component={Link} to="/orders" color="inherit">
+              My Orders
+            </Button>
+            <Typography variant="body2" style={{ marginRight: 12, marginLeft: 12 }}>
               Hi, {user && user.name}
             </Typography>
             <Button color="inherit" onClick={handleSignout}>
@@ -86,3 +90,7 @@ const Header = () => {
 };
 
 export default Header;
+    
+
+
+          
