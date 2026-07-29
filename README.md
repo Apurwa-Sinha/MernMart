@@ -1,6 +1,6 @@
-# SmartCart — MERN Ecommerce with AI-Powered Features
+# Vantage Cart — MERN Ecommerce with AI-Powered Features
 
-A full-stack MERN ecommerce application with authentication, product/category/order management, Braintree payments, and five distinctive AI/ML-powered features layered on top of the base shopping experience.
+A full-stack MERN ecommerce application with authentication, product/category/order management, Braintree payments, and six distinctive AI/ML and real-time features layered on top of the base shopping experience.
 
 ## Features
 
@@ -18,6 +18,7 @@ A full-stack MERN ecommerce application with authentication, product/category/or
 - **AI stylist chat** — a chat widget (Claude API) grounded in the user's Style DNA and your real product catalog — never invents products that don't exist
 - **Group-buy / split-the-bill checkout** — start a shared order, invite others by email, each pays their own share via a link before the order ships
 - **Return-risk indicator** — category-level return-rate signal shown on product pages, computed from real order history
+- **Live co-browsing** — "shop with a friend": share a link and see each other's cursor and chat live on the same product page, in real time
 
 ## Tech stack
 
@@ -26,6 +27,7 @@ A full-stack MERN ecommerce application with authentication, product/category/or
 - **Auth**: JWT (`jsonwebtoken`, `express-jwt`), bcrypt password hashing
 - **Payments**: Braintree (sandbox)
 - **AI/ML**: Hugging Face Inference API (image embeddings), Anthropic API (stylist chat)
+- **Real-time**: Socket.io (live co-browsing)
 
 ## Project structure (expected)
 
@@ -128,17 +130,15 @@ npm start
 
 This project has been built up incrementally and reasoned through carefully, but **has not yet been run end-to-end**. Before treating any of this as production-ready:
 
+- [x] `routes/user.js` — confirmed and provided, exposing `read`, `update`, and the Style DNA `track-view` route.
 - [ ] Confirm your actual `routes/order.js` has a route for `GET /api/orders/by/user/:userId` (needed by the "My Orders" page) — add if missing:
   ```js
   const { purchaseHistory } = require('../controllers/user');
   router.get('/orders/by/user/:userId', requireSignin, isAuth, purchaseHistory);
   ```
 - [ ] Confirm `routes/category.js` exposes `GET /api/categories`, and `PUT`/`DELETE /api/category/:categoryId/:userId` — assumed by the admin category management page but never directly verified.
-- [ ] Confirm `routes/user.js` includes the Style DNA view-tracking route:
-  ```js
-  router.post('/user/track-view/:userId', requireSignin, isAuth, trackProductView);
-  ```
-- [ ] Double-check installed versions of `express-jwt`, `express-validator`, and `formidable` against what the code assumes (v8+, v7+, and v1.x respectively) — mismatches here are the most likely source of a hard crash.
+- [ ] Confirm your real server `package.json` matches installed versions of `express-jwt` (v8+), `express-validator` (v7+), and `formidable` (v1.x) — mismatches here are the most likely source of a hard crash.
+- [ ] Confirm your hosting provider supports persistent WebSocket connections (needed for live co-browsing) — some free tiers restrict or disallow this.
 - [ ] No automated tests exist yet.
 - [ ] No pagination on admin lists or the homepage product grid (fine for small catalogs, not for scale).
 - [ ] No password reset flow.
@@ -150,12 +150,6 @@ This project has been built up incrementally and reasoned through carefully, but
 - Passwords are hashed with bcrypt (cost factor 10); Braintree handles all payment card data — no card details ever touch this server.
 - Product prices are always recomputed server-side at checkout, never trusted from the client.
 - The stylist chat is explicitly constrained to only recommend products that exist in your actual catalog — the system prompt instructs it never to invent products, and recommendations are resolved against real product IDs before being returned to the frontend.
-
-
-
-
-
-
 
 
 
