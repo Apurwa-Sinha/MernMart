@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 
@@ -23,6 +22,7 @@ import UpdateProduct from './pages/UpdateProduct';
 import AdminOrders from './pages/AdminOrders';
 import ManageCategories from './pages/ManageCategories';
 import OrderHistory from './pages/OrderHistory';
+import LegalPage from './pages/LegalPage';
 
 function App() {
   return (
@@ -38,6 +38,9 @@ function App() {
 
         {/* invited participants may not have accounts, so this stays public */}
         <Route exact path="/group-order/:token" component={GroupOrderPay} />
+
+        {/* legal pages — public */}
+        <Route exact path="/legal/:page" component={LegalPage} />
 
         {/* these require a signed-in user */}
         <PrivateRoute exact path="/checkout" component={Checkout} />
@@ -69,6 +72,5 @@ function App() {
 }
 
 export default App;
-
 
 
